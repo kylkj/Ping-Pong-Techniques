@@ -1,0 +1,803 @@
+<!DOCTYPE html>
+<html lang="en" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Vision Classifier | Community Impact & Interactive Model</title>
+    
+    <!-- Google Fonts: Plus Jakarta Sans for headings & Inter for crisp UI legibility -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@600;700;800&display=swap" rel="stylesheet">
+    
+    <!-- Tailwind CSS via CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- TensorFlow.js & Teachable Machine Image Libraries -->
+    <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@latest/dist/tf.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@teachablemachine/image@latest/dist/teachablemachine-image.min.js"></script>
+
+    <!-- Tailwind Custom Configuration for Fonts & Design Tokens -->
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                        display: ['Plus Jakarta Sans', 'sans-serif'],
+                    },
+                    colors: {
+                        brand: {
+                            50: '#eef2ff',
+                            100: '#e0e7ff',
+                            200: '#c7d2fe',
+                            500: '#6366f1',
+                            600: '#4f46e5',
+                            700: '#4338ca',
+                            900: '#312e81',
+                        },
+                        accent: {
+                            500: '#0ea5e9',
+                            600: '#0284c7',
+                        }
+                    },
+                    animation: {
+                        'pulse-slow': 'pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite',
+                        'fade-in': 'fadeIn 0.5s ease-out forwards',
+                    },
+                    keyframes: {
+                        fadeIn: {
+                            '0%': { opacity: '0', transform: 'translateY(10px)' },
+                            '100%': { opacity: '1', transform: 'translateY(0)' },
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+</head>
+<body class="bg-slate-50 text-slate-800 antialiased selection:bg-brand-600 selection:text-white flex flex-col min-h-screen">
+
+    <!-- Top Navigation Bar: Visual Anchor & Clear Alignment -->
+    <header class="sticky top-0 z-40 w-full backdrop-blur-md bg-white/80 border-b border-slate-200/80 transition-all">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
+            <!-- Brand Identity -->
+            <div class="flex items-center space-x-3">
+                <div class="w-9 h-9 rounded-xl bg-gradient-to-br from-brand-600 to-accent-500 flex items-center justify-center text-white shadow-md shadow-brand-500/20">
+                    <!-- Inline SVG Icon -->
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                    </svg>
+                </div>
+                <div>
+                    <span class="font-display font-bold text-lg tracking-tight text-slate-900">Vision<span class="text-brand-600">AI</span></span>
+                    <span class="hidden sm:inline-block ml-2 px-2 py-0.5 text-xs font-medium bg-brand-50 text-brand-700 rounded-full border border-brand-200">GitHub Pages Ready</span>
+                </div>
+            </div>
+
+            <!-- Navigation Links -->
+            <nav class="flex items-center space-x-2 sm:space-x-6 text-sm font-medium text-slate-600">
+                <a href="#classifier" class="px-3 py-2 rounded-lg hover:text-brand-600 hover:bg-slate-100/70 transition-colors">Live Classifier</a>
+                <a href="#community-impact" class="px-3 py-2 rounded-lg hover:text-brand-600 hover:bg-slate-100/70 transition-colors">Community Impact</a>
+                <a href="#design-principles" class="hidden md:inline-block px-3 py-2 rounded-lg hover:text-brand-600 hover:bg-slate-100/70 transition-colors">Design & Tech</a>
+            </nav>
+        </div>
+    </header>
+
+    <!-- Main Content Container -->
+    <main class="flex-grow">
+        
+        <!-- Hero Section: Visual Hierarchy, Contrast, & Breathing White Space -->
+        <section class="relative overflow-hidden pt-12 pb-16 sm:pt-16 sm:pb-24 bg-gradient-to-b from-white via-slate-50 to-slate-100/80 border-b border-slate-200/60">
+            <!-- Subtle Decorative Background Glow -->
+            <div class="absolute top-0 left-1/2 -translate-x-1/2 w-full max-w-4xl h-64 bg-gradient-to-r from-brand-500/10 via-accent-500/10 to-purple-500/10 blur-3xl pointer-events-none rounded-full"></div>
+            
+            <div class="relative max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+                <div class="inline-flex items-center space-x-2 px-3.5 py-1.5 rounded-full bg-white border border-slate-200 shadow-sm mb-6">
+                    <span id="header-status-dot" class="w-2.5 h-2.5 rounded-full bg-amber-400 animate-pulse"></span>
+                    <span id="header-status-text" class="text-xs font-semibold uppercase tracking-wider text-slate-600">Initializing Neural Model...</span>
+                </div>
+                
+                <h1 class="font-display text-3xl sm:text-5xl font-extrabold text-slate-900 tracking-tight leading-tight mb-6">
+                    Accessible Machine Vision for <span class="text-transparent bg-clip-text bg-gradient-to-r from-brand-600 to-accent-600">Community Empowerment</span>
+                </h1>
+                
+                <p class="text-base sm:text-lg text-slate-600 max-w-2xl mx-auto leading-relaxed mb-8">
+                    Powered by Google Teachable Machine and TensorFlow.js. Experience real-time, privacy-first image classification directly in your browser—no cloud uploads or specialized hardware required.
+                </p>
+
+                <div class="flex flex-wrap items-center justify-center gap-4">
+                    <a href="#classifier" class="px-6 py-3.5 rounded-xl bg-brand-600 hover:bg-brand-700 text-white font-semibold text-sm shadow-lg shadow-brand-600/25 transition-all transform hover:-translate-y-0.5 focus:outline-none focus:ring-2 focus:ring-brand-500 focus:ring-offset-2">
+                        Launch Interactive Classifier
+                    </a>
+                    <a href="#community-impact" class="px-6 py-3.5 rounded-xl bg-white hover:bg-slate-50 text-slate-700 font-semibold text-sm border border-slate-300 shadow-sm transition-all">
+                        Explore Community Significance
+                    </a>
+                </div>
+            </div>
+        </section>
+
+        <!-- Interactive AI Classifier Workspace: Balanced 2-Column Grid -->
+        <section id="classifier" class="py-12 sm:py-20 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="mb-10 text-center sm:text-left flex flex-col sm:flex-row sm:items-end justify-between gap-4">
+                <div>
+                    <h2 class="font-display text-2xl sm:text-3xl font-bold text-slate-900">Interactive Classification Studio</h2>
+                    <p class="text-slate-600 mt-1 text-sm sm:text-base">Choose between real-time webcam analysis or upload a static image from your device.</p>
+                </div>
+                <!-- Model Info Badge -->
+                <div class="inline-flex items-center space-x-2 text-xs text-slate-500 bg-white px-3 py-2 rounded-xl border border-slate-200 shadow-sm self-center sm:self-auto">
+                    <span class="font-semibold text-slate-700">Model ID:</span>
+                    <code class="font-mono text-brand-600 bg-brand-50 px-1.5 py-0.5 rounded">MzQR7wSju</code>
+                </div>
+            </div>
+
+            <!-- Inline Error / Notification Banner (Replaces alert() cleanly) -->
+            <div id="notification-banner" class="hidden mb-6 p-4 rounded-2xl border flex items-start space-x-3 transition-all" role="alert">
+                <div id="notification-icon" class="flex-shrink-0 mt-0.5"></div>
+                <div class="flex-1 text-sm">
+                    <h3 id="notification-title" class="font-semibold"></h3>
+                    <p id="notification-message" class="mt-0.5 opacity-90"></p>
+                </div>
+                <button onclick="hideNotification()" class="text-slate-400 hover:text-slate-600 p-1 rounded-lg" aria-label="Close message">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+                </button>
+            </div>
+
+            <!-- Main Balanced Grid: Left = Visual Input, Right = Real-time Telemetry & Predictions -->
+            <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+                
+                <!-- LEFT COLUMN: Input Source Viewport (7 cols on lg) -->
+                <div class="lg:col-span-7 bg-white rounded-3xl border border-slate-200/90 shadow-xl shadow-slate-200/40 overflow-hidden">
+                    
+                    <!-- Mode Switcher Tabs -->
+                    <div class="p-3 bg-slate-100/80 border-b border-slate-200/80 flex items-center justify-between gap-2">
+                        <div class="grid grid-cols-2 gap-2 w-full sm:w-auto bg-slate-200/70 p-1 rounded-xl">
+                            <button id="tab-webcam" onclick="switchMode('webcam')" class="flex items-center justify-center space-x-2 px-4 py-2.5 rounded-lg text-sm font-semibold transition-all bg-white text-brand-700 shadow-sm">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"/></svg>
+                                <span>Live Webcam</span>
+                            </button>
+                            <button id="tab-upload" onclick="switchMode('upload')" class="flex items-center justify-center space-x-2 px-4 py-2.5 rounded-lg text-sm font-semibold transition-all text-slate-600 hover:text-slate-900">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+                                <span>Upload Image</span>
+                            </button>
+                        </div>
+
+                        <!-- Live Status Pill -->
+                        <div id="viewport-badge" class="hidden sm:flex items-center space-x-1.5 px-3 py-1.5 rounded-full bg-slate-200/70 text-slate-600 text-xs font-medium">
+                            <span class="w-2 h-2 rounded-full bg-slate-400"></span>
+                            <span>Standby</span>
+                        </div>
+                    </div>
+
+                    <!-- Viewport Stage -->
+                    <div class="p-6 sm:p-8 flex flex-col items-center justify-center">
+                        
+                        <!-- WEBCAM CONTAINER -->
+                        <div id="webcam-section" class="w-full flex flex-col items-center">
+                            <div class="relative w-full max-w-md aspect-square bg-slate-900 rounded-2xl overflow-hidden shadow-inner border border-slate-200 flex items-center justify-center">
+                                <!-- Placeholder State before Camera Starts -->
+                                <div id="webcam-placeholder" class="text-center p-6 text-slate-400 flex flex-col items-center">
+                                    <div class="w-16 h-16 rounded-2xl bg-slate-800 border border-slate-700 flex items-center justify-center mb-4 text-brand-400">
+                                        <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+                                    </div>
+                                    <p class="text-sm font-medium text-slate-200">Camera Feed Inactive</p>
+                                    <p class="text-xs text-slate-400 mt-1 max-w-xs">Click "Start Camera" below to grant browser access and begin real-time classification.</p>
+                                </div>
+
+                                <!-- Teachable Machine Canvas Mount Point -->
+                                <div id="webcam-canvas-container" class="w-full h-full hidden [&>canvas]:w-full [&>canvas]:h-full [&>canvas]:object-cover"></div>
+                                
+                                <!-- Subtle Corner Scanner Guides when active -->
+                                <div id="scanner-overlay" class="hidden pointer-events-none absolute inset-4 border-2 border-white/25 rounded-xl">
+                                    <div class="absolute top-0 left-0 w-4 h-4 border-t-2 border-l-2 border-brand-400 rounded-tl"></div>
+                                    <div class="absolute top-0 right-0 w-4 h-4 border-t-2 border-r-2 border-brand-400 rounded-tr"></div>
+                                    <div class="absolute bottom-0 left-0 w-4 h-4 border-b-2 border-l-2 border-brand-400 rounded-bl"></div>
+                                    <div class="absolute bottom-0 right-0 w-4 h-4 border-b-2 border-r-2 border-brand-400 rounded-br"></div>
+                                </div>
+                            </div>
+
+                            <!-- Camera Controls -->
+                            <div class="mt-6 flex flex-wrap items-center justify-center gap-3 w-full">
+                                <button id="btn-start-cam" onclick="startWebcam()" disabled class="flex items-center space-x-2 px-6 py-3 rounded-xl bg-brand-600 hover:bg-brand-700 disabled:bg-slate-300 disabled:cursor-not-allowed text-white font-semibold text-sm shadow-md shadow-brand-600/20 transition-all">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                                    <span>Start Camera</span>
+                                </button>
+                                <button id="btn-stop-cam" onclick="stopWebcam()" class="hidden items-center space-x-2 px-6 py-3 rounded-xl bg-rose-600 hover:bg-rose-700 text-white font-semibold text-sm shadow-md shadow-rose-600/20 transition-all">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 10a1 1 0 011-1h4a1 1 0 011 1v4a1 1 0 01-1 1h-4a1 1 0 01-1-1v-4z"/></svg>
+                                    <span>Stop Camera</span>
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- IMAGE UPLOAD FALLBACK CONTAINER -->
+                        <div id="upload-section" class="hidden w-full flex flex-col items-center">
+                            <label for="image-file-input" id="drop-zone" class="w-full max-w-md aspect-square rounded-2xl border-2 border-dashed border-slate-300 hover:border-brand-500 bg-slate-50 hover:bg-brand-50/30 transition-all cursor-pointer flex flex-col items-center justify-center p-6 text-center relative overflow-hidden group">
+                                
+                                <!-- Default Upload Prompt -->
+                                <div id="upload-prompt" class="flex flex-col items-center">
+                                    <div class="w-14 h-14 rounded-2xl bg-white shadow-sm border border-slate-200 flex items-center justify-center text-brand-600 group-hover:scale-105 transition-transform mb-4">
+                                        <svg class="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"/></svg>
+                                    </div>
+                                    <p class="text-sm font-semibold text-slate-800">Click to upload or drag & drop</p>
+                                    <p class="text-xs text-slate-500 mt-1">Supports PNG, JPG, WEBP (Processed 100% locally)</p>
+                                </div>
+
+                                <!-- Uploaded Image Preview -->
+                                <img id="uploaded-image-preview" alt="Uploaded sample for classification" class="hidden w-full h-full object-contain rounded-xl" />
+                                <input id="image-file-input" type="file" accept="image/*" class="sr-only" onchange="handleImageUpload(event)" />
+                            </label>
+
+                            <div class="mt-6 flex items-center justify-center gap-3">
+                                <button type="button" onclick="document.getElementById('image-file-input').click()" class="px-5 py-2.5 rounded-xl bg-white hover:bg-slate-50 text-slate-700 font-semibold text-sm border border-slate-300 shadow-sm transition-all">
+                                    Select Another Image
+                                </button>
+                            </div>
+                        </div>
+
+                    </div>
+                </div>
+
+                <!-- RIGHT COLUMN: Prediction Results & Visual Hierarchy (5 cols on lg) -->
+                <div class="lg:col-span-5 flex flex-col gap-6">
+                    
+                    <!-- Top Prediction Highlight Card -->
+                    <div class="bg-gradient-to-br from-slate-900 via-slate-800 to-brand-900 rounded-3xl p-6 sm:p-8 text-white shadow-xl relative overflow-hidden">
+                        <div class="absolute -right-8 -top-8 w-36 h-36 bg-brand-500/20 rounded-full blur-2xl pointer-events-none"></div>
+                        
+                        <div class="flex items-center justify-between mb-3">
+                            <span class="text-xs font-bold uppercase tracking-widest text-brand-300">Primary Detection</span>
+                            <span id="inference-time-badge" class="text-xs font-mono text-slate-300 bg-white/10 px-2.5 py-1 rounded-full">Ready</span>
+                        </div>
+                        
+                        <div id="top-class-name" class="font-display text-2xl sm:text-3xl font-extrabold tracking-tight text-white truncate">
+                            Awaiting Input...
+                        </div>
+                        
+                        <div class="mt-4 flex items-baseline space-x-2">
+                            <span id="top-class-confidence" class="font-display text-4xl font-extrabold text-accent-400">0.0%</span>
+                            <span class="text-sm text-slate-300">confidence score</span>
+                        </div>
+                    </div>
+
+                    <!-- Detailed Class Probability Distribution Card -->
+                    <div class="bg-white rounded-3xl border border-slate-200/90 p-6 sm:p-7 shadow-lg shadow-slate-200/30">
+                        <div class="flex items-center justify-between mb-5">
+                            <h3 class="font-display font-bold text-slate-900 text-lg">Class Probabilities</h3>
+                            <span id="total-classes-count" class="text-xs font-medium text-slate-500 bg-slate-100 px-2.5 py-1 rounded-full">Loading classes...</span>
+                        </div>
+
+                        <!-- Dynamic Bars Container -->
+                        <div id="predictions-container" class="space-y-4">
+                            <!-- Skeleton Loading Bars -->
+                            <div class="animate-pulse space-y-4">
+                                <div>
+                                    <div class="flex justify-between text-sm mb-1.5">
+                                        <div class="h-4 bg-slate-200 rounded w-24"></div>
+                                        <div class="h-4 bg-slate-200 rounded w-12"></div>
+                                    </div>
+                                    <div class="w-full bg-slate-100 rounded-full h-3"></div>
+                                </div>
+                                <div>
+                                    <div class="flex justify-between text-sm mb-1.5">
+                                        <div class="h-4 bg-slate-200 rounded w-32"></div>
+                                        <div class="h-4 bg-slate-200 rounded w-12"></div>
+                                    </div>
+                                    <div class="w-full bg-slate-100 rounded-full h-3"></div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Privacy Assurance Footer inside Card -->
+                        <div class="mt-6 pt-4 border-t border-slate-100 flex items-center space-x-2.5 text-xs text-slate-500">
+                            <svg class="w-4 h-4 text-emerald-600 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/></svg>
+                            <span><strong>Edge Inference:</strong> All video frames & images stay strictly on your device.</span>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+        </section>
+
+        <!-- SIGNIFICANCE TO THE COMMUNITY SECTION -->
+        <section id="community-impact" class="py-16 sm:py-24 bg-white border-t border-slate-200/80">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                
+                <!-- Section Header -->
+                <div class="max-w-3xl mx-auto text-center mb-16">
+                    <span class="inline-block px-3 py-1 rounded-full bg-brand-50 text-brand-700 text-xs font-bold uppercase tracking-wider mb-3">Real-World Purpose</span>
+                    <h2 class="font-display text-3xl sm:text-4xl font-extrabold text-slate-900 tracking-tight mb-4">
+                        Significance to the Community
+                    </h2>
+                    <p class="text-slate-600 text-base sm:text-lg leading-relaxed">
+                        Artificial intelligence achieves its highest value when it is accessible, transparent, and directly serves everyday people. By deploying this trained vision model on an open web platform, we bridge the gap between advanced machine learning and practical community empowerment.
+                    </p>
+                </div>
+
+                <!-- 3-Column Impact Pillars (Repetition, Proximity & Alignment) -->
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+                    
+                    <!-- Pillar 1: Democratizing AI & Digital Literacy -->
+                    <article class="bg-slate-50 rounded-3xl p-8 border border-slate-200/80 hover:border-brand-300 hover:shadow-xl hover:shadow-brand-500/5 transition-all flex flex-col">
+                        <div class="w-12 h-12 rounded-2xl bg-brand-600 text-white flex items-center justify-center shadow-md shadow-brand-600/20 mb-6">
+                            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/></svg>
+                        </div>
+                        <h3 class="font-display text-xl font-bold text-slate-900 mb-3">Educational Equity & AI Literacy</h3>
+                        <p class="text-slate-600 text-sm leading-relaxed flex-grow">
+                            Students, educators, and curious citizens often view AI as an intimidating "black box." Providing an interactive, zero-install tool allows learners in any classroom or community center to observe computer vision confidence scores in real time, demystifying how neural networks interpret visual data.
+                        </p>
+                        <div class="mt-6 pt-4 border-t border-slate-200/70 text-xs font-semibold text-brand-700">
+                            Impact: Hands-on STEM learning without costly hardware
+                        </div>
+                    </article>
+
+                    <!-- Pillar 2: Rapid Visual Identification & Local Operations -->
+                    <article class="bg-slate-50 rounded-3xl p-8 border border-slate-200/80 hover:border-accent-400 hover:shadow-xl hover:shadow-accent-500/5 transition-all flex flex-col">
+                        <div class="w-12 h-12 rounded-2xl bg-accent-600 text-white flex items-center justify-center shadow-md shadow-accent-600/20 mb-6">
+                            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"/></svg>
+                        </div>
+                        <h3 class="font-display text-xl font-bold text-slate-900 mb-3">Practical Everyday Assistance</h3>
+                        <p class="text-slate-600 text-sm leading-relaxed flex-grow">
+                            Custom-trained image classifiers empower local initiatives—from assisting volunteers in sorting materials and cataloging local resources, to helping community members rapidly identify objects or visual cues using nothing more than a standard smartphone or laptop browser.
+                        </p>
+                        <div class="mt-6 pt-4 border-t border-slate-200/70 text-xs font-semibold text-accent-700">
+                            Impact: Instant, mobile-friendly decision support
+                        </div>
+                    </article>
+
+                    <!-- Pillar 3: Privacy-Preserving & Low-Bandwidth Access -->
+                    <article class="bg-slate-50 rounded-3xl p-8 border border-slate-200/80 hover:border-emerald-400 hover:shadow-xl hover:shadow-emerald-500/5 transition-all flex flex-col">
+                        <div class="w-12 h-12 rounded-2xl bg-emerald-600 text-white flex items-center justify-center shadow-md shadow-emerald-600/20 mb-6">
+                            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3.055 11H5a2 2 0 012 2v1a2 2 0 002 2 2 2 0 012 2v2.945M8 3.935V5.5A2.5 2.5 0 0010.5 8h.5a2 2 0 012 2 2 2 0 104 0 2 2 0 012-2h1.064M15 20.488V18a2 2 0 012-2h3.064M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                        </div>
+                        <h3 class="font-display text-xl font-bold text-slate-900 mb-3">Inclusive & Privacy-First Design</h3>
+                        <p class="text-slate-600 text-sm leading-relaxed flex-grow">
+                            Hosted freely on GitHub Pages and executed locally via TensorFlow.js, this tool protects community privacy—no personal images are ever transmitted to external servers. Furthermore, once loaded, inference works reliably even in areas with intermittent internet connectivity.
+                        </p>
+                        <div class="mt-6 pt-4 border-t border-slate-200/70 text-xs font-semibold text-emerald-700">
+                            Impact: Zero data harvesting & resilient offline capability
+                        </div>
+                    </article>
+
+                </div>
+
+                <!-- Community Callout Banner -->
+                <div class="mt-12 rounded-3xl bg-brand-50 border border-brand-200/80 p-6 sm:p-10 flex flex-col md:flex-row items-center justify-between gap-6">
+                    <div class="max-w-2xl">
+                        <h4 class="font-display text-xl font-bold text-brand-950 mb-2">Open-Source Collaboration for Local Needs</h4>
+                        <p class="text-sm sm:text-base text-brand-900/80 leading-relaxed">
+                            Because this interface is lightweight and hosted via static web standards, fellow developers, students, and civic organizations can fork, inspect, and adapt it to solve unique neighborhood challenges—fostering a culture of shared civic technology.
+                        </p>
+                    </div>
+                    <a href="#classifier" class="flex-shrink-0 px-6 py-3 rounded-xl bg-brand-600 hover:bg-brand-700 text-white font-semibold text-sm shadow-sm transition-colors">
+                        Test the Model Now
+                    </a>
+                </div>
+
+            </div>
+        </section>
+
+        <!-- Design Principles Architecture Overview (Transparency & Craft) -->
+        <section id="design-principles" class="py-16 bg-slate-50 border-t border-slate-200/80">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                <div class="flex flex-col md:flex-row md:items-end justify-between mb-10 gap-4">
+                    <div>
+                        <span class="text-xs font-bold uppercase tracking-wider text-brand-600">UI/UX Craftsmanship</span>
+                        <h2 class="font-display text-2xl sm:text-3xl font-bold text-slate-900 mt-1">Built on Core Principles of Design</h2>
+                    </div>
+                    <p class="text-sm text-slate-600 max-w-md">Engineered for intuitive human-AI interaction across desktop, tablet, and mobile viewports.</p>
+                </div>
+
+                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
+                    <div class="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-sm">
+                        <div class="text-brand-600 font-display font-bold text-sm mb-1.5">01. Visual Hierarchy & Contrast</div>
+                        <p class="text-xs text-slate-600 leading-relaxed">High-contrast dark telemetry cards immediately spotlight the primary AI prediction while secondary bars show full class distribution.</p>
+                    </div>
+                    <div class="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-sm">
+                        <div class="text-brand-600 font-display font-bold text-sm mb-1.5">02. Balance & Alignment</div>
+                        <p class="text-xs text-slate-600 leading-relaxed">An asymmetrical 7:5 split grid pairs the visual input viewport with live inference meters on a consistent structural baseline.</p>
+                    </div>
+                    <div class="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-sm">
+                        <div class="text-brand-600 font-display font-bold text-sm mb-1.5">03. Proximity & White Space</div>
+                        <p class="text-xs text-slate-600 leading-relaxed">Related controls are grouped cleanly inside rounded cards with generous padding to reduce cognitive load during live testing.</p>
+                    </div>
+                    <div class="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-sm">
+                        <div class="text-brand-600 font-display font-bold text-sm mb-1.5">04. Repetition & Accessibility</div>
+                        <p class="text-xs text-slate-600 leading-relaxed">Consistent iconography, color tokens, and dual input modes (camera + file upload) ensure inclusive usability for every visitor.</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- Clean Footer -->
+    <footer class="bg-white border-t border-slate-200 py-8">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col sm:flex-row items-center justify-between gap-4 text-sm text-slate-500">
+            <div class="flex items-center space-x-2">
+                <span class="font-display font-bold text-slate-800">VisionAI</span>
+                <span>•</span>
+                <span>Hosted on GitHub Pages</span>
+            </div>
+            <div class="text-xs text-slate-400 text-center sm:text-right">
+                Powered by TensorFlow.js & Google Teachable Machine • Privacy-First Client-Side Inference
+            </div>
+        </div>
+    </footer>
+
+    <!-- Application Logic: Teachable Machine Integration, Webcam & File Upload -->
+    <script>
+        // Teachable Machine Model Base URL
+        const MODEL_URL = "https://teachablemachine.withgoogle.com/models/MzQR7wSju/";
+
+        // Application State
+        let model = null;
+        let webcam = null;
+        let maxPredictions = 0;
+        let isWebcamRunning = false;
+        let animationFrameId = null;
+        let currentMode = 'webcam'; // 'webcam' | 'upload'
+
+        // Color palette for dynamic confidence bars (repeats gracefully if > 5 classes)
+        const BAR_COLORS = [
+            'bg-brand-600',
+            'bg-accent-500',
+            'bg-emerald-500',
+            'bg-amber-500',
+            'bg-purple-600'
+        ];
+
+        /**
+         * Displays an accessible inline alert banner instead of native alert()
+         */
+        function showNotification(title, message, type = 'error') {
+            const banner = document.getElementById('notification-banner');
+            const titleEl = document.getElementById('notification-title');
+            const msgEl = document.getElementById('notification-message');
+            const iconEl = document.getElementById('notification-icon');
+
+            banner.classList.remove('hidden', 'bg-rose-50', 'border-rose-200', 'text-rose-900', 'bg-amber-50', 'border-amber-200', 'text-amber-900', 'bg-emerald-50', 'border-emerald-200', 'text-emerald-900');
+
+            if (type === 'error') {
+                banner.classList.add('bg-rose-50', 'border-rose-200', 'text-rose-900');
+                iconEl.innerHTML = `<svg class="w-5 h-5 text-rose-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>`;
+            } else if (type === 'warning') {
+                banner.classList.add('bg-amber-50', 'border-amber-200', 'text-amber-900');
+                iconEl.innerHTML = `<svg class="w-5 h-5 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>`;
+            } else {
+                banner.classList.add('bg-emerald-50', 'border-emerald-200', 'text-emerald-900');
+                iconEl.innerHTML = `<svg class="w-5 h-5 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>`;
+            }
+
+            titleEl.textContent = title;
+            msgEl.textContent = message;
+        }
+
+        function hideNotification() {
+            document.getElementById('notification-banner').classList.add('hidden');
+        }
+
+        /**
+         * Updates the top status indicator badge
+         */
+        function updateHeaderStatus(status, text) {
+            const dot = document.getElementById('header-status-dot');
+            const label = document.getElementById('header-status-text');
+            label.textContent = text;
+
+            dot.classList.remove('bg-amber-400', 'bg-emerald-500', 'bg-rose-500', 'animate-pulse');
+            if (status === 'ready') {
+                dot.classList.add('bg-emerald-500');
+            } else if (status === 'error') {
+                dot.classList.add('bg-rose-500');
+            } else {
+                dot.classList.add('bg-amber-400', 'animate-pulse');
+            }
+        }
+
+        /**
+         * Loads the Teachable Machine model and metadata on page initialization
+         */
+        async function loadModel() {
+            try {
+                const modelURL = MODEL_URL + "model.json";
+                const metadataURL = MODEL_URL + "metadata.json";
+
+                model = await tmImage.load(modelURL, metadataURL);
+                maxPredictions = model.getTotalClasses();
+
+                // Update UI status & enable camera button
+                updateHeaderStatus('ready', `Model Loaded (${maxPredictions} Classes)`);
+                document.getElementById('btn-start-cam').disabled = false;
+                document.getElementById('total-classes-count').textContent = `${maxPredictions} Classes`;
+
+                // Initialize empty probability bars using actual class labels from model metadata
+                const classLabels = model.getClassLabels();
+                renderPredictionBars(classLabels.map(label => ({ className: label, probability: 0 })), false);
+
+            } catch (error) {
+                console.error("Failed to load Teachable Machine model:", error);
+                updateHeaderStatus('error', 'Model Connection Failed');
+                showNotification(
+                    "Unable to Load AI Model",
+                    "Please check your internet connection or verify that the Teachable Machine model URL is publicly accessible.",
+                    "error"
+                );
+            }
+        }
+
+        /**
+         * Switches between Live Webcam mode and Image Upload mode
+         */
+        async function switchMode(mode) {
+            if (currentMode === mode) return;
+            currentMode = mode;
+            hideNotification();
+
+            const tabWebcam = document.getElementById('tab-webcam');
+            const tabUpload = document.getElementById('tab-upload');
+            const webcamSection = document.getElementById('webcam-section');
+            const uploadSection = document.getElementById('upload-section');
+
+            if (mode === 'webcam') {
+                tabWebcam.classList.add('bg-white', 'text-brand-700', 'shadow-sm');
+                tabWebcam.classList.remove('text-slate-600');
+                tabUpload.classList.remove('bg-white', 'text-brand-700', 'shadow-sm');
+                tabUpload.classList.add('text-slate-600');
+
+                webcamSection.classList.remove('hidden');
+                uploadSection.classList.add('hidden');
+            } else {
+                // Stop webcam if running before switching to upload tab
+                if (isWebcamRunning) {
+                    await stopWebcam();
+                }
+
+                tabUpload.classList.add('bg-white', 'text-brand-700', 'shadow-sm');
+                tabUpload.classList.remove('text-slate-600');
+                tabWebcam.classList.remove('bg-white', 'text-brand-700', 'shadow-sm');
+                tabWebcam.classList.add('text-slate-600');
+
+                uploadSection.classList.remove('hidden');
+                webcamSection.classList.add('hidden');
+
+                // Re-classify if an image was previously uploaded
+                const previewImg = document.getElementById('uploaded-image-preview');
+                if (!previewImg.classList.contains('hidden') && previewImg.src) {
+                    await predictElement(previewImg);
+                }
+            }
+        }
+
+        /**
+         * Initializes and starts the webcam feed for continuous real-time prediction
+         */
+        async function startWebcam() {
+            if (!model) {
+                showNotification("Model Still Loading", "Please wait a moment for the neural network to finish loading.", "warning");
+                return;
+            }
+
+            hideNotification();
+            const startBtn = document.getElementById('btn-start-cam');
+            const stopBtn = document.getElementById('btn-stop-cam');
+            const placeholder = document.getElementById('webcam-placeholder');
+            const canvasContainer = document.getElementById('webcam-canvas-container');
+            const scannerOverlay = document.getElementById('scanner-overlay');
+            const viewportBadge = document.getElementById('viewport-badge');
+
+            try {
+                startBtn.disabled = true;
+                startBtn.innerHTML = `<span>Requesting Camera...</span>`;
+
+                const flip = true; // Mirror webcam for natural user interaction
+                webcam = new tmImage.Webcam(400, 400, flip);
+                await webcam.setup(); // Request camera permission
+                await webcam.play();
+
+                isWebcamRunning = true;
+
+                // Mount canvas cleanly
+                canvasContainer.innerHTML = '';
+                canvasContainer.appendChild(webcam.canvas);
+
+                // Toggle UI states
+                placeholder.classList.add('hidden');
+                canvasContainer.classList.remove('hidden');
+                scannerOverlay.classList.remove('hidden');
+                startBtn.classList.add('hidden');
+                stopBtn.classList.remove('hidden');
+                stopBtn.classList.add('flex');
+
+                viewportBadge.innerHTML = `<span class="w-2 h-2 rounded-full bg-emerald-500 animate-ping"></span><span class="text-emerald-700 font-semibold">Live Feed Active</span>`;
+
+                // Kick off animation loop
+                animationFrameId = window.requestAnimationFrame(webcamLoop);
+
+            } catch (err) {
+                console.error("Webcam access error:", err);
+                isWebcamRunning = false;
+                startBtn.disabled = false;
+                startBtn.innerHTML = `<span>Start Camera</span>`;
+
+                showNotification(
+                    "Camera Access Unavailable",
+                    "Browser camera permission was denied or no webcam was detected. You can switch to the 'Upload Image' tab to test the AI model with photos!",
+                    "warning"
+                );
+            }
+        }
+
+        /**
+         * Stops the webcam stream and resets viewport UI
+         */
+        async function stopWebcam() {
+            isWebcamRunning = false;
+            if (animationFrameId) {
+                window.cancelAnimationFrame(animationFrameId);
+                animationFrameId = null;
+            }
+            if (webcam) {
+                await webcam.stop();
+                webcam = null;
+            }
+
+            const startBtn = document.getElementById('btn-start-cam');
+            const stopBtn = document.getElementById('btn-stop-cam');
+            const placeholder = document.getElementById('webcam-placeholder');
+            const canvasContainer = document.getElementById('webcam-canvas-container');
+            const scannerOverlay = document.getElementById('scanner-overlay');
+            const viewportBadge = document.getElementById('viewport-badge');
+
+            placeholder.classList.remove('hidden');
+            canvasContainer.classList.add('hidden');
+            scannerOverlay.classList.add('hidden');
+
+            stopBtn.classList.add('hidden');
+            stopBtn.classList.remove('flex');
+            startBtn.classList.remove('hidden');
+            startBtn.disabled = false;
+            startBtn.innerHTML = `
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                <span>Start Camera</span>
+            `;
+
+            viewportBadge.innerHTML = `<span class="w-2 h-2 rounded-full bg-slate-400"></span><span>Standby</span>`;
+            document.getElementById('inference-time-badge').textContent = 'Paused';
+        }
+
+        /**
+         * Continuous frame loop for live webcam classification
+         */
+        async function webcamLoop() {
+            if (!isWebcamRunning || !webcam) return;
+            webcam.update();
+            await predictElement(webcam.canvas);
+            animationFrameId = window.requestAnimationFrame(webcamLoop);
+        }
+
+        /**
+         * Handles static image file selection or drag-and-drop
+         */
+        function handleImageUpload(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            if (!file.type.startsWith('image/')) {
+                showNotification("Invalid File Format", "Please upload a valid image file (PNG, JPG, or WEBP).", "error");
+                return;
+            }
+
+            hideNotification();
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const previewImg = document.getElementById('uploaded-image-preview');
+                const promptEl = document.getElementById('upload-prompt');
+
+                previewImg.src = e.target.result;
+                previewImg.onload = async function() {
+                    promptEl.classList.add('hidden');
+                    previewImg.classList.remove('hidden');
+                    await predictElement(previewImg);
+                };
+            };
+            reader.readAsDataURL(file);
+        }
+
+        /**
+         * Runs model inference on an HTMLImageElement or HTMLCanvasElement
+         */
+        async function predictElement(imageSource) {
+            if (!model) return;
+            try {
+                const startTime = performance.now();
+                const predictions = await model.predict(imageSource);
+                const durationMs = Math.round(performance.now() - startTime);
+
+                document.getElementById('inference-time-badge').textContent = `${durationMs} ms`;
+                renderPredictionBars(predictions, true);
+            } catch (error) {
+                console.error("Inference error:", error);
+            }
+        }
+
+        /**
+         * Updates the Primary Detection highlight card and animated probability bars
+         */
+        function renderPredictionBars(predictions, hasActiveInput = true) {
+            const container = document.getElementById('predictions-container');
+            const topNameEl = document.getElementById('top-class-name');
+            const topConfEl = document.getElementById('top-class-confidence');
+
+            // Sort a copy by highest probability first so top match is clear
+            const sorted = [...predictions].sort((a, b) => b.probability - a.probability);
+
+            if (hasActiveInput && sorted.length > 0) {
+                const top = sorted[0];
+                topNameEl.textContent = top.className;
+                topConfEl.textContent = `${(top.probability * 100).toFixed(1)}%`;
+            }
+
+            // Build clean HTML for each class bar
+            container.innerHTML = sorted.map((item, idx) => {
+                const pct = (item.probability * 100).toFixed(1);
+                const isTop = hasActiveInput && idx === 0 && item.probability > 0.15;
+                const barColor = BAR_COLORS[idx % BAR_COLORS.length];
+
+                return `
+                    <div class="p-3 rounded-2xl transition-colors ${isTop ? 'bg-brand-50/70 border border-brand-200/80' : 'bg-slate-50/70 border border-transparent'}">
+                        <div class="flex items-center justify-between text-sm mb-1.5">
+                            <span class="font-semibold ${isTop ? 'text-brand-900' : 'text-slate-700'} truncate pr-2">
+                                ${escapeHTML(item.className)}
+                            </span>
+                            <span class="font-mono font-bold ${isTop ? 'text-brand-700' : 'text-slate-600'}">
+                                ${pct}%
+                            </span>
+                        </div>
+                        <div class="w-full bg-slate-200/80 rounded-full h-2.5 overflow-hidden">
+                            <div class="${barColor} h-2.5 rounded-full transition-all duration-150 ease-out" style="width: ${pct}%"></div>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        /**
+         * Utility to prevent XSS when rendering model class labels
+         */
+        function escapeHTML(str) {
+            const div = document.createElement('div');
+            div.textContent = str;
+            return div.innerHTML;
+        }
+
+        // Enable Drag & Drop on the Upload Zone
+        const dropZone = document.getElementById('drop-zone');
+        if (dropZone) {
+            ['dragenter', 'dragover'].forEach(eventName => {
+                dropZone.addEventListener(eventName, (e) => {
+                    e.preventDefault();
+                    dropZone.classList.add('border-brand-500', 'bg-brand-50/50');
+                });
+            });
+            ['dragleave', 'drop'].forEach(eventName => {
+                dropZone.addEventListener(eventName, (e) => {
+                    e.preventDefault();
+                    dropZone.classList.remove('border-brand-500', 'bg-brand-50/50');
+                });
+            });
+            dropZone.addEventListener('drop', (e) => {
+                const files = e.dataTransfer.files;
+                if (files.length > 0) {
+                    const input = document.getElementById('image-file-input');
+                    input.files = files;
+                    handleImageUpload({ target: input });
+                }
+            });
+        }
+
+        // Initialize model on page load
+        window.addEventListener('DOMContentLoaded', loadModel);
+    </script>
+</body>
+</html>
