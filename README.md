@@ -1,1 +1,1 @@
-# Ping-Pong-Serves
+# Ping-Pong-Techniques
